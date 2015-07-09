@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>Phaser Basic Project Template</title>
+	<script src="js/phaser.js"></script>
+	<script src="src/Boot.js"></script>
+	<script src="src/Preloader.js"></script>
+	<script src="src/MainMenu.js"></script>
+	<script src="src/Game.js"></script>
+	<script src="src/Title.js"></script>
+	<script src="src/GameOver.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	var game = new Phaser.Game(1024, 378, Phaser.AUTO, 'game');
+		(function() {
+			game.state.add('Boot', BasicGame.Boot);
+			game.state.add('Preloader', BasicGame.Preloader);
+			game.state.add('MainMenu', BasicGame.MainMenu);
+			game.state.add('Game', BasicGame.Game);
+			game.state.add('Title', BasicGame.Title);
+			game.state.add('GameOver', BasicGame.GameOver);
+			game.state.start('Boot');
+		})(); 
+
+</script>
+
+</body>
+</html>

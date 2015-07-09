@@ -1,0 +1,517 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+    <title>LudumDare 31</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+   </head>
+<body>
+<center>
+<script type="text/javascript">
+
+var game = new Phaser.Game(600, 800, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+//Variables
+var cursors;
+var bullets;
+var onShoot1
+var bool = false;
+var direction = true;
+var snowflake;
+var santa;
+var snowmen;
+var snowmens;
+var score = 0;
+var scoreText;
+var Timer = 0;
+var snowmenAlive = [];
+var badnbr = 15;
+var life = 4;
+var spriteBonus;
+var effectBonus = 0;
+var effectActive = 0;
+var timerBonus = 0;
+var popupBonus;
+var wave = 1;
+var waveText;
+var endText;
+var rand = 0;
+var bossLife = 0;
+var hit;
+var boum;
+var shootSound;
+var bonusSound;
+
+function preload() {
+	game.load.image('back', 'assets/img/fond.png');
+	game.load.image('santa', 'assets/img/santa.png');
+	game.load.image('border', 'assets/img/border.png');
+	game.load.image('ground', 'assets/img/ground.png');
+	game.load.image('blood', 'assets/img/bullet.png');
+	game.load.image('snowmenY', 'assets/img/snowmanY.png');
+	game.load.image('snowmenB', 'assets/img/snowmanB.png');
+	game.load.image('snowmenG', 'assets/img/snowmanG.png');
+	game.load.image('snowmenR', 'assets/img/snowmanR.png');
+	game.load.image('boss', 'assets/img/boss.png');
+	game.load.image('heart', 'assets/img/heart.png');
+	game.load.image('shoot', 'assets/img/blood.png');
+	game.load.image('shoot2', 'assets/img/blood2.png');
+	game.load.image('shoot3', 'assets/img/blood3.png');
+	game.load.image('gift1', 'assets/img/gift1.png');
+	game.load.image('gift2', 'assets/img/gift2.png');
+	game.load.image('gift3', 'assets/img/gift3.png');
+	game.load.image('gift4', 'assets/img/gift4.png');
+	game.load.image('gift5', 'assets/img/gift5.png');
+	game.load.image('bonus1', 'assets/img/bonus1.png');
+	game.load.image('bonus2', 'assets/img/bonus2.png');
+	game.load.image('bonus3', 'assets/img/bonus3.png');
+	game.load.image('bonus4', 'assets/img/bonus4.png');
+	game.load.image('tree1', 'assets/img/tree1.png');
+	game.load.image('tree2', 'assets/img/tree2.png');
+	game.load.image('tree3', 'assets/img/tree3.png');
+	game.load.image('tree4', 'assets/img/tree4.png');
+	game.load.image('tree5', 'assets/img/tree5.png');
+
+}
+
+function create() {
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+	///////SPRITES
+	game.add.sprite(0, 0, 'back');
+	tree = game.add.sprite(500, 10, 'tree2');
+	///////TEXTES
+	endText = game.add.text(10, 300, "GAME OVER \n Click to restart" , { font: '70px Courrier New', fill: '#ff0000' });
+	endText.visible = false;
+	winText = game.add.text(10, 300, "YOU WIN ! \n Click to restart" , { font: '70px Courrier New', fill: '#00ff00' });
+	winText.visible = false;
+	scoreText = game.add.text(10, 25, "Score : " + score, { font: '34px Courrier New', fill: '#fff' });
+	waveText = game.add.text(10, 50, "Wave : " + wave +"/15", { font: '34px Courrier New', fill: '#fff' });
+	/////BORDERS
+	ground = game.add.sprite(0,800, 'ground');
+	game.physics.arcade.enable(ground);
+	ground.enable = true;
+    ground.body.immovable = true;
+	left = game.add.sprite(0, 0, 'border');
+	game.physics.arcade.enable(left);
+	left.enable = true;
+    left.body.immovable = true;
+	right = game.add.sprite(599, 0, 'border');
+	game.physics.arcade.enable(right);
+	right.enable = true;
+    right.body.immovable = true;
+	//////GROUPS
+		//bullets
+	bullets = game.add.group();
+    bullets.enableBody = true;
+	bullets.physicsBodyType = Phaser.Physics.ARCADE;
+		//Snowflakes
+	snowflakes = game.add.group();
+    snowflakes.enableBody = true;
+    snowflakes.physicsBodyType = Phaser.Physics.ARCADE;
+    snowflakes.createMultiple(30, 'shoot');
+    snowflakes.setAll('outOfBoundsKill', true);
+    snowflakes.setAll('checkWorldBounds', true);
+	
+	snowflakes2 = game.add.group();
+    snowflakes2.enableBody = true;
+    snowflakes2.physicsBodyType = Phaser.Physics.ARCADE;
+    snowflakes2.createMultiple(30, 'shoot2');
+	snowflakes2.setAll('outOfBoundsKill', true);
+    snowflakes2.setAll('checkWorldBounds', true);
+	
+	snowflakes3 = game.add.group();
+    snowflakes3.enableBody = true;
+    snowflakes3.physicsBodyType = Phaser.Physics.ARCADE;
+    snowflakes3.createMultiple(30, 'shoot3');
+	snowflakes3.setAll('outOfBoundsKill', true);
+    snowflakes3.setAll('checkWorldBounds', true);
+		//snowmen
+	snowmens = game.add.group();
+    snowmens.enableBody = true;
+	snowmens.physicsBodyType = Phaser.Physics.ARCADE;
+	//////SPAWN
+	SpawnSnowmen();
+	SpawnSanta();
+	//////CONTROLS
+	cursors = game.input.keyboard.createCursorKeys();
+}
+
+function update() {
+	//collides
+	game.physics.arcade.overlap(snowmens, left, ChangeDirection1, null, this);
+	game.physics.arcade.overlap(snowmens, right, ChangeDirection2, null, this);
+	game.physics.arcade.overlap(snowmens, ground, gameOver, null, this);
+	game.physics.arcade.overlap(santa, snowflakes, KillSanta, null, this);
+	game.physics.arcade.overlap(santa, snowflakes2, KillSanta, null, this);
+	game.physics.arcade.overlap(santa, snowflakes3, KillSanta, null, this);
+	game.physics.arcade.overlap(bullets, snowmens, KillSnowmen, null, this);
+	if(effectBonus != 0) { game.physics.arcade.overlap(spriteBonus, ground, KillBonus, null, this); }
+	if(effectBonus != 0) { game.physics.arcade.overlap(spriteBonus, santa, AddBonus, null, this); }
+	
+	
+	
+	//move
+    if (cursors.left.isDown) {
+        santa.x -= 9;
+	}
+    else if (cursors.right.isDown) {
+		santa.x += 9;
+    }
+	//move Snowmen
+	if(direction==true) {
+		if(effectActive == 5) {
+			snowmens.x -=1;
+		}
+		else {
+			snowmens.x -=4;
+		}	
+	}
+	else {
+		if(effectActive == 5) {
+			snowmens.x +=1;
+		}
+		else {
+			snowmens.x +=4;
+		}
+	}
+	//End wave check
+	if(badnbr == 0) {
+		wave++;
+		if (wave == 16) {
+			gameWin();
+			badnbr = 15;
+		}
+		else {
+			if(wave%5==0) {
+				SpawnBoss();
+				bossLife = 5;
+				badnbr = 1;
+				waveText.text = "Wave : " + wave + "/15";
+			}
+			else {
+				SpawnSnowmen();
+				badnbr = 15;
+				waveText.text = "Wave : " + wave + "/15";
+			}
+		}
+	}
+	//fire
+	if(cursors.up.isDown) {
+		Fire();
+	}
+	//test timer fireenemie
+	if (game.time.now > Timer) {
+        snowmenFires();
+    }
+	//Effect check
+	if(game.time.now > timerBonus) {
+		effectActive = 0;
+	}
+	if(effectActive == 1) {
+		if(life<5) {
+			life++;
+			resetLife();
+		}
+		effectActive = 0;
+	}
+	if(effectActive == 4) {
+		snowmens.x = 0;
+		snowmens.y = 0;
+		effectActive = 0;
+	}
+	//check outofbounds
+	if(bool == true) {
+		onShoot1.events.onOutOfBounds.add(KillonShoot1, this);
+	}
+	//Life count
+	if(life < 1) {
+		gameOver();
+	}
+}
+/////////////////////////////////////
+function gameOver() {
+	santa.kill();
+	snowmens.removeAll();
+	tree.kill();
+	endText.visible = true;
+	game.input.onTap.addOnce(restart,this);
+}
+function gameWin() {
+	santa.kill();
+	snowmens.removeAll();
+	tree.kill();
+	winText.visible = true;
+	game.input.onTap.addOnce(restart,this);
+}
+function restart () {
+	score = 0;
+	scoreText.text = "Score : " + score;
+	wave = 1;
+	waveText.text = "Wave : " + wave + "/15";
+	Timer = 0;
+	snowmenAlive = [];
+	badnbr = 15;
+	life = 4;
+	effectBonus = 0;
+	effectActive = 0;
+	timerBonus = 0;
+	rand = 0;
+	endText.visible = false;
+	winText.visible = false;
+	SpawnSanta();
+	SpawnSnowmen();
+	resetLife();
+}
+
+//////SPAWN
+function SpawnSanta() {
+	santa = game.add.sprite(300, 700, 'santa');
+    game.physics.arcade.enable(santa);
+	santa.body.collideWorldBounds = true;
+}
+function SpawnSnowmen() {
+	snowmens.x =0;
+	snowmens.y =0;
+	for (var y = 0; y < 3; y++)
+    {
+        for (var x = 0; x < 5; x++)
+        {
+			rand = Math.floor((Math.random() * 4) + 1);
+			switch(rand) {
+				case 1:
+					var snowmen = snowmens.create(x * 100, y * 100, 'snowmenB');
+				break;
+				case 2:
+					var snowmen = snowmens.create(x * 100, y * 100, 'snowmenR');
+				break;
+				case 3:
+					var snowmen = snowmens.create(x * 100, y * 100, 'snowmenG');
+				break;
+				case 4:
+					var snowmen = snowmens.create(x * 100, y * 100, 'snowmenY');
+				break;
+			}
+			game.physics.arcade.enable(snowmen);
+            snowmen.body.moves = false;
+			snowmen.enable = true;
+			snowmen.body.collideWorldBounds = true;
+        }
+    }
+}
+function SpawnBoss() {
+	snowmens.x =0;
+	snowmens.y =0;
+	var boss = snowmens.create(100, 100, 'boss');
+	game.physics.arcade.enable(boss);
+    boss.body.moves = false;
+	boss.enable = true;
+	boss.body.collideWorldBounds = true;
+    
+}
+function SpawnBonus(snowmen) {
+	effectBonus = Math.floor((Math.random() * 5) + 1);
+	switch(effectBonus) {
+		case 1:
+			spriteBonus = game.add.sprite(snowmen.x, snowmen.y, 'gift1');
+		break;
+		case 2:
+			spriteBonus = game.add.sprite(snowmen.x, snowmen.y, 'gift2');
+		break;
+		case 3:
+			spriteBonus = game.add.sprite(snowmen.x, snowmen.y, 'gift3');
+		break;
+		case 4:
+			spriteBonus = game.add.sprite(snowmen.x, snowmen.y, 'gift4');
+		break;
+		case 5:
+			spriteBonus = game.add.sprite(snowmen.x, snowmen.y, 'gift5');
+		break;
+	}
+	game.physics.arcade.enable(spriteBonus);
+	spriteBonus.body.velocity.y = 300;
+	spriteBonus.enable = true;
+	spriteBonus.body.immovable = true;
+}
+//////KILL
+function KillBonus(spriteBonus) {
+	spriteBonus.kill();
+	effectBonus = 0;
+}
+function KillSanta(santa, snowflake) {
+	santa.kill();
+	snowflake.kill();
+	life--;
+	score -= 25;
+	scoreText.text = "Score : " + score;
+	resetLife();
+	SpawnSanta();
+}
+function KillSnowmen(onShoot1, snowmen) {
+	if(bossLife != 0) {
+		bossLife--;
+		score += 50;
+		scoreText.text = "Score : " + score;
+		onShoot1.kill();
+		bool = false;
+	}
+	else {
+		if (Math.floor((Math.random() * 5) + 1) == 1 && effectBonus == 0 ) {
+			SpawnBonus(snowmen);
+		}
+		onShoot1.kill();
+		snowmen.kill();
+		bool = false;
+		badnbr--;
+		score += 10;
+		scoreText.text = "Score : " + score;
+	}
+}
+function KillonShoot1(obj1) {
+	obj1.kill();
+	bool = false;
+}
+
+//////DIRECTION
+function ChangeDirection1() {
+	if(effectActive == 5) {
+		snowmens.y +=1;
+	}
+	else {
+		snowmens.y +=5;
+	}
+	direction = false;
+}
+function ChangeDirection2() {
+	if(effectActive == 5) {
+		snowmens.y +=1;
+	}
+	else {
+		snowmens.y +=5;
+	}
+	direction = true;
+}
+function ResetSnowmen() {
+	snowmens.x = 0;
+	snowmens.y = 0;
+}
+//////BONUS
+function AddBonus(gift) {
+	gift.kill();
+    effectActive = effectBonus;
+	if(effectActive == 3) {
+		effectActive--;
+	}
+	effectBonus = 0;
+	PopupBonus();
+	timerBonus = game.time.now + 10000;
+}
+function PopupBonus() {
+	switch(effectActive) {
+		case 1:
+			popupBonus = game.add.sprite(300, 700, 'bonus1');
+		break;
+		case 2:
+			popupBonus = game.add.sprite(300, 700, 'bonus2');
+		break;
+		case 4:
+			popupBonus = game.add.sprite(300, 700, 'bonus3');
+		break;
+		case 5:
+			popupBonus = game.add.sprite(300, 700, 'bonus4');
+		break;
+	}
+	game.physics.arcade.enable(popupBonus);
+	popupBonus.body.velocity.y = -300;
+}
+//////LIFE
+function resetLife() {
+	tree.kill();
+	switch(life) {
+		case 1:
+			tree = game.add.sprite(500, 10, 'tree5');
+		break;
+		case 2:
+			tree = game.add.sprite(500, 10, 'tree4');
+		break;
+		case 3:
+			tree = game.add.sprite(500, 10, 'tree3');
+		break;
+		case 4:
+			tree = game.add.sprite(500, 10, 'tree2');
+		break;
+		case 5:
+			tree = game.add.sprite(500, 10, 'tree1');
+		break;
+		default :
+			tree = game.add.sprite(500, 10, 'tree1');
+		break;
+	}
+}
+
+///////FIRE
+function Fire() {
+	if(bool == false){
+		onShoot1 = bullets.create(santa.x+25, santa.y-16, 'blood');
+		if(effectActive == 2) {
+			onShoot1.body.velocity.y = -2000;
+		}
+		else {
+			onShoot1.body.velocity.y = -1000;
+		}
+		onShoot1.checkWorldBounds = true;
+		game.physics.arcade.enable(onShoot1);
+		onShoot1.enable = true;
+		onShoot1.body.immovable = true;
+		bool = true;
+	}
+}
+
+function snowmenFires () {
+    snowflake = snowflakes.getFirstExists(false);
+    snowflake2 = snowflakes2.getFirstExists(false);
+    snowflake3 = snowflakes3.getFirstExists(false);
+    snowmenAlive.length=0;
+    snowmens.forEachAlive(function(snowmen){
+        snowmenAlive.push(snowmen);
+    });
+    if (snowflake && snowmenAlive.length > 0) {
+        var random=game.rnd.integerInRange(0,snowmenAlive.length-1);
+        var shooter=snowmenAlive[random];
+		
+        if(wave >= 1 && wave <= 4) {
+			snowflake.reset(shooter.body.x, shooter.body.y);
+			snowflake.body.velocity.y = 500;
+			Timer = game.time.now + 1500;
+		}
+		else if(wave == 5) {
+			snowflake.reset(shooter.body.x, shooter.body.y);
+			snowflake.body.velocity.y = 500;
+			Timer = game.time.now + 500;
+		}
+		else if(wave >= 6 && wave <= 9) {
+			snowflake2.reset(shooter.body.x, shooter.body.y);
+			snowflake2.body.velocity.y = 300;
+			Timer = game.time.now + 1000;
+		}
+		else if(wave == 10) {
+			snowflake2.reset(shooter.body.x, shooter.body.y);
+			game.physics.arcade.moveToObject(snowflake2,santa,500);
+			Timer = game.time.now + 500;
+		}
+		else if(wave >= 11 && wave <= 14) {
+			snowflake3.reset(shooter.body.x, shooter.body.y);
+			snowflake3.body.velocity.y = 500;
+			Timer = game.time.now + 500;
+		}
+		else if(wave == 15) {
+			snowflake3.reset(shooter.body.x, shooter.body.y);
+			game.physics.arcade.moveToObject(snowflake3,santa,500);
+			Timer = game.time.now + 250;
+		}
+    }
+}
+
+</script>
+
+</body>
+</html>
